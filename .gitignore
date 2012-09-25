@@ -1,0 +1,19 @@
+# pyc files
+*.pyc
+*.pyd
+*.dll
+# image files
+*.tif
+*.jpg
+*.jpeg
+*.gif
+# any zips that may exist
+*.zip
+# Debug folders
+*/Debug
+# Thumb db files
+*.db
+#logs
+logs/
+#build folder
+build/
