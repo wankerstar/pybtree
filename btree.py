@@ -1,5 +1,5 @@
 # BTree.py - Python B-Tree implementation
-# Copyright 2012 Tristan Ankerstar, Licensed under GPL.
+# Copyright 2012 Tristan Ankerstar, Licensed under GPLv3, no warranty.
 
 class BTreeException(Exception):
     pass
@@ -182,17 +182,21 @@ class BTree:
                 self.root = self.root.children[0]
 
     def insert(self, item):
+        """Inserts an item into the tree."""
         bubble = self.root.insert(item, self.keyfunc, self.maxsize)
         if not bubble is None:
             self._mk_new_root(bubble)
 
     def delete(self, item):
+        """Deletes an item with the same key as the item passed."""
         self._delete(self.keyfunc(item))
 
     def delete_by_key(self, key):
+        """Deletes an item with the key passed."""
         self._delete(key)
 
     def __iter__(self):
+        """Returns an iterator over the tree."""
         return self.root.__iter__()
 
     # Debugging / test code follows
