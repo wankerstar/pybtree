@@ -4,6 +4,70 @@
 class BTreeException(Exception):
     pass
 
+class BTree:
+    """Init takes a max nodesize (min will be integer maxsize div 2)
+        and a key function which is used to determine ordering. Naturally,
+        elements must be of a type such that keyfunc produces an ordering.
+       Supports iteration, insertion, retrieval and deletion."""
+    def __init__(self, maxsize, keyfunc):
+        self.root    = BNode()
+        self.maxsize = int(maxsize)
+        self.minsize = self.maxsize / 2
+        self.keyfunc = keyfunc
+
+    def _mk_new_root(self, item):
+        newroot             = BNode()
+        newroot.add_item(item, self.keyfunc)
+        newroot.children    = self.root.split()
+        self.root           = newroot
+
+    def _delete(self, key):
+        self.root.delete(key, self.keyfunc, self.minsize, self.maxsize)
+        if self.root.items == []:
+            if not self.root.children == []:
+                self.root = self.root.children[0]
+
+    def insert(self, item):
+        """Inserts an item into the tree."""
+        bubble = self.root.insert(item, self.keyfunc, self.maxsize)
+        if not bubble is None:
+            self._mk_new_root(bubble)
+
+    def delete(self, item):
+        """Deletes an item with the same key as the item passed."""
+        self._delete(self.keyfunc(item))
+
+    def delete_by_key(self, key):
+        """Deletes an item with the key passed."""
+        self._delete(key)
+
+    def __iter__(self):
+        """Returns an iterator over the tree."""
+        return self.root.__iter__()
+
+    # Debugging / test code follows
+    def validate(self):
+        if not self._val_size(self.root, ignoremin=True):
+            raise BTreeException("Size validation error!")
+        if not self._val_order():
+            raise BTreeException("Order validation error!")
+
+    def _val_size(self, node, ignoremin=False):
+        size = len(node.items)
+        if not ignoremin and size < self.minsize:
+            return False
+        return size <= self.maxsize and len(node.children) in (0, size+1) and \
+                all(map(self._val_size, node.children))
+
+    def _val_order(self):
+        isordered = lambda x, y: self.keyfunc(x) <= self.keyfunc(y)
+        prev = None
+        for i in self:
+            if not isordered(prev, i):
+                return False
+            prev = i
+        return True
+
 class BNode:
     def __init__(self):
         self.items      = []
@@ -157,67 +221,3 @@ class BNode:
                 yield i
                 for thing in c:
                     yield thing
-
-class BTree:
-    """BTree class. Takes a max nodesize (min will be integer max div 2)
-        and a key function which is used to determine ordering. Naturally,
-        elements must be of a time such that keyfunc produces an ordering.
-       Supports iteration, insertion, and deletion."""
-    def __init__(self, maxsize, keyfunc):
-        self.root    = BNode()
-        self.maxsize = int(maxsize)
-        self.minsize = self.maxsize / 2
-        self.keyfunc = keyfunc
-
-    def _mk_new_root(self, item):
-        newroot             = BNode()
-        newroot.add_item(item, self.keyfunc)
-        newroot.children    = self.root.split()
-        self.root           = newroot
-
-    def _delete(self, key):
-        self.root.delete(key, self.keyfunc, self.minsize, self.maxsize)
-        if self.root.items == []:
-            if not self.root.children == []:
-                self.root = self.root.children[0]
-
-    def insert(self, item):
-        """Inserts an item into the tree."""
-        bubble = self.root.insert(item, self.keyfunc, self.maxsize)
-        if not bubble is None:
-            self._mk_new_root(bubble)
-
-    def delete(self, item):
-        """Deletes an item with the same key as the item passed."""
-        self._delete(self.keyfunc(item))
-
-    def delete_by_key(self, key):
-        """Deletes an item with the key passed."""
-        self._delete(key)
-
-    def __iter__(self):
-        """Returns an iterator over the tree."""
-        return self.root.__iter__()
-
-    # Debugging / test code follows
-    def validate(self):
-        if not self._val_size(self.root, ignoremin=True):
-            raise BTreeException("Size validation error!")
-        if not self._val_order():
-            raise BTreeException("Order validation error!")
-
-    def _val_size(self, node, ignoremin=False):
-        size = len(node.items)
-        if not ignoremin and size < self.minsize:
-            return False
-        return size <= self.maxsize and len(node.children) in (0, size+1) and \
-                all(map(self._val_size, node.children))
-
-    def _val_order(self):
-        isordered = lambda x, y: self.keyfunc(x) <= self.keyfunc(y)
-        prev = None
-        for i in self:
-            if not isordered(prev, i):
-                return False
-            prev = i
-        return True
